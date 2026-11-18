@@ -1,0 +1,6 @@
+# Release download: build-zip.ps1 makes it next to this folder; it goes to GitHub Releases.
+*.zip
+
+# Written by the tools at run time (only in the install folder, never here). Just in case:
+*.log
+jobs/
