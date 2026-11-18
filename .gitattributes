@@ -3,3 +3,6 @@
 *.zip binary
 *.jpg binary
 *.png binary
+mac/*.command text eol=lf
+mac/*.js text eol=lf
+mac/README.txt text eol=lf

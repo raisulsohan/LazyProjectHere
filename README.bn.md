@@ -71,7 +71,21 @@ Windows 11-এ অপশনগুলো **Show more options**-এর ভেত�
 
 সরাতে: `Uninstall.cmd`-এ ডাবল-ক্লিক করুন। বানানো project-গুলো থেকে যায়।
 
-Windows 11, After Effects 2027 আর Premiere Pro 2027-এ পরীক্ষা করা।
+## Mac (beta)
+
+> [!WARNING]
+> Mac ভার্সন **beta: Mac-এ এখনও কেউ চালিয়ে দেখেনি।** সমস্যা হলে [GitHub-এ issue খুলুন](https://github.com/raisulsohan/LazyProjectHere/issues)। সাথে `~/Library/Logs/LazyProjectHere.log`-এর লাইনগুলো দিন।
+
+1. [Releases](https://github.com/raisulsohan/LazyProjectHere/releases/latest) থেকে `LazyProjectHere-mac.zip` নামিয়ে Extract করুন।
+2. `Install.command`-এ ডাবল-ক্লিক করুন। macOS "can't be opened" বললে **System Settings > Privacy & Security**-এ গিয়ে **Open Anyway** চাপুন। অথবা Terminal-এ চালান: `bash /path/to/Install.command`।
+3. Finder-এ একটা ফোল্ডারে (বা তার ভেতরের কোনো ফাইলে) রাইট-ক্লিক করুন > **Quick Actions** > **New After Effects project here** / **New Premiere Pro project here**।
+4. প্রথমবার macOS জিজ্ঞাসা করবে টুলটা After Effects নিয়ন্ত্রণ করতে পারবে কি না। **OK** চাপুন।
+
+Windows-এর মতোই project তৈরি হয়। Quick Action না দেখালে: **System Settings > General > Login Items & Extensions > Finder**-এ চালু করুন। সরাতে: `Uninstall.command`-এ ডাবল-ক্লিক করুন।
+
+Mac-এ এখনও জানা নেই: After Effects-এর Import ডায়ালগ ফোল্ডারে খোলে কি না। Premiere Pro-র Import ফোল্ডার বদলায় Premiere বন্ধ থাকলে।
+
+Windows 11, After Effects 2027 আর Premiere Pro 2027-এ পরীক্ষা করা। Mac ভার্সন এখনও পরীক্ষা করা হয়নি।
 
 ## License
 

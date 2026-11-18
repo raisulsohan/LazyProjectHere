@@ -1,6 +1,7 @@
-// AEHere.jsx - runs inside After Effects, started by AEHere.ps1.
-// AEHere.ps1 first sets the global AEHERE = { folder, project, base, result,
-// duration, fps, bg, close } and then evaluates this file.
+// AEHere.jsx - runs inside After Effects, started by AEHere.ps1 (Windows) or
+// lazyprojecthere.js (Mac). They first set the global
+// AEHERE = { folder, project, base, result, duration, fps, bg, close }
+// and then evaluate this file.
 //
 // Makes a new project (File > New > New Project, so a New Project Template
 // set in Preferences is used), adds three comps "<base>_16X9" 1920x1080,
@@ -12,6 +13,10 @@
 //                the template's comp (else a "...Comps"/"...Projects" folder,
 //                else a new "00 Comps"). Empty template comps are removed:
 //                the three new comps take their place.
+// The answer ("OK\n<path>", "CANCELLED" or "ERROR\n<message>") is the value
+// of this file, and it is also written to AEHERE.result when that is set
+// (Windows). On the Mac the answer comes back through AppleScript DoScript,
+// so no file is written there.
 (function (J) {
     function writeText(path, text) {
         var f = new File(path);
@@ -20,12 +25,18 @@
         f.write(text);
         f.close();
     }
+    function answer(text) {
+        if (J.result) { writeText(J.result, text); }
+        return text;
+    }
 
     // AEHere.ps1 may send the script again while After Effects is still
     // starting: run it only once.
-    var mark = new File(J.result + '.started');
-    if (mark.exists) { return; }
-    writeText(mark.fsName, 'started');
+    if (J.result) {
+        var mark = new File(J.result + '.started');
+        if (mark.exists) { return 'DUPLICATE'; }
+        writeText(mark.fsName, 'started');
+    }
 
     try {
         var target = new File(J.project);
@@ -34,7 +45,7 @@
         // If the open project has unsaved changes, After Effects asks to save
         // it first; Cancel gives null.
         var p = app.newProject();
-        if (!p) { writeText(J.result, 'CANCELLED'); return; }
+        if (!p) { return answer('CANCELLED'); }
 
         var i, it, compFolder = null;
         var tplComps = [];
@@ -79,8 +90,8 @@
             comps[0].openInViewer();
             p.save();
         }
-        writeText(J.result, 'OK\n' + target.fsName);
+        return answer('OK\n' + target.fsName);
     } catch (e) {
-        writeText(J.result, 'ERROR\n' + e.toString() + (e.line ? ' (AEHere.jsx line ' + e.line + ')' : ''));
+        return answer('ERROR\n' + e.toString() + (e.line ? ' (AEHere.jsx line ' + e.line + ')' : ''));
     }
 })(AEHERE);
