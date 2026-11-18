@@ -6,14 +6,29 @@
 
 A small Windows right-click tool for video editors and motion designers.
 
-[বাংলায় পড়ুন](README.bn.md) · [Download](https://github.com/raisulsohan/LazyProjectHere/releases/latest)
+[বাংলায় পড়ুন](README.bn.md) · [Download](https://github.com/raisulsohan/LazyProjectHere/releases/latest) · [▶ Watch the 20-second demo](https://raisulsohan.github.io/LazyProjectHere/)
 
 ![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-5B6CF0)
 ![After Effects](https://img.shields.io/badge/After%20Effects-2027-9999FF)
 ![Premiere Pro](https://img.shields.io/badge/Premiere%20Pro-2027-9999FF)
 ![License: MIT](https://img.shields.io/badge/license-MIT-2BA36B)
 
+<a href="https://raisulsohan.github.io/LazyProjectHere/"><img src="docs/hero.jpg" width="880" alt="Right-click a footage folder in Windows Explorer: New After Effects project here, New Premiere Pro project here"></a>
+
+**[▶ Watch the demo with sound](https://raisulsohan.github.io/LazyProjectHere/)** (20 seconds, plays in the browser)
+
 </div>
+
+## See it
+
+| Premiere Pro | After Effects |
+|---|---|
+| <img src="docs/premiere-ready.jpg" alt="Premiere Pro project with bins 01 Footage to 05 Photos and three sequences 16X9, 9X16, 4X5"> | <img src="docs/ae-ready.jpg" alt="After Effects project with the 00 Comps folder and three comps 16X9, 9X16, 4X5"> |
+| 5 bins, 3 sequences named after the folder | `00 Comps` with 3 comps, 16X9 open |
+
+<img src="docs/import-folder.jpg" width="880" alt="The Import dialog (Ctrl+I) opens in the footage folder">
+
+*Ctrl+I opens in the footage folder, so you do not have to browse for it.*
 
 ## What it does
 

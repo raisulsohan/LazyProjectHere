@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Project Opener Promo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<script>
+/* ───────────────────────── Player: fixed stage, full control bar, synced sound ─────────────────────────
+   URL: ?ar=45 (4:5 cut, 1080×1350) · ?t=3.2 · ?paused · ?autoplay · ?loop0 · ?nobar                      */
+(function () {
+  const CSS = `
+  :root { --bar: 60px; --fg: #e8e8ee; --mut: #8a8a96; --acc: #8c6cff; --panel: #0f0f12; --line: #1e1e24; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #050506; color: var(--fg); overflow: hidden;
+    font: 13px "Segoe UI", -apple-system, system-ui, Roboto, sans-serif; }
+  #wrap { position: absolute; left: 0; right: 0; top: 0; bottom: var(--bar); overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; overflow: hidden; background: #0a0a0c; cursor: pointer; }
+  #stage > canvas { position: absolute; left: 0; top: 0; display: block; }
+  #loader { position: absolute; inset: 0; display: grid; place-items: center; color: #9aa; font-size: 34px; letter-spacing: 2px; }
+  #playOv { position: absolute; inset: 0; display: none; place-items: center; cursor: pointer; background: rgba(0,0,0,.28); z-index: 5; }
+  #playOv.on { display: grid; }
+  #playOv .b { width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.94); display: grid; place-items: center; box-shadow: 0 8px 40px rgba(0,0,0,.5); transition: transform .15s; }
+  #playOv .b svg { width: 54px; height: 54px; margin-left: 8px; fill: #120d2a; }
+  #playOv .c { position: absolute; top: calc(50% + 84px); left: 0; right: 0; text-align: center; color: #fff; font: 600 18px "Hind Siliguri", "Nirmala UI", sans-serif; text-shadow: 0 2px 8px #000; }
+  #playOv:hover .b { transform: scale(1.05); }
+  body.nobar #wrap { bottom: 0; } body.nobar #bar { display: none; }
+  #bar { position: absolute; left: 0; right: 0; bottom: 0; min-height: 60px; display: flex; flex-wrap: wrap; align-items: center;
+    align-content: center; column-gap: 6px; row-gap: 4px; padding: 6px 12px; background: var(--panel); border-top: 1px solid var(--line); user-select: none; }
+  /* narrow window: no control is ever hidden. c1 drops the title and the separators;
+     c2 puts the seek bar on a row of its own and lets the buttons wrap */
+  #bar.c1 .ttl, #bar.c1 .sep { display: none; }
+  #bar.c2 { justify-content: center; }
+  #bar.c2 #seek { order: -1; flex: 1 1 100%; margin: 4px 0 2px; }
+  #bar button { all: unset; display: grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border-radius: 8px;
+    color: var(--fg); cursor: pointer; font-weight: 600; font-size: 12px; white-space: nowrap; }
+  #bar button:hover { background: #1c1c22; }
+  #bar button:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+  #bar button.on { color: var(--acc); }
+  #bar svg { width: 18px; height: 18px; fill: currentColor; }
+  #bar .num { font-variant-numeric: tabular-nums; color: var(--mut); white-space: nowrap; min-width: 92px; text-align: center; }
+  #bar .num b { color: var(--fg); font-weight: 600; }
+  #bar .ttl { color: var(--mut); font-weight: 600; padding: 0 4px; white-space: nowrap; }
+  #seek { flex: 1; min-width: 80px; }
+  #vol { width: 80px; }
+  input[type=range] { accent-color: var(--acc); height: 4px; cursor: pointer; }
+  select { background: #17171c; color: var(--fg); border: 1px solid var(--line); border-radius: 7px; height: 30px; padding: 0 6px; font: inherit; cursor: pointer; }
+  .sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; }
+  #bar button.txt { display: flex; gap: 6px; padding: 0 9px; letter-spacing: .5px; border: 1px solid var(--line); }`;
+
+  const BAR = (title, frames, dur, vert) => `
+  <span class="ttl">${title}</span>
+  <button id="bRestart" title="Restart (Home)"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+  <button id="bPrev" title="Previous frame (← or ,)"><svg viewBox="0 0 24 24"><path d="M7 5h2v14H7zM19 5v14l-9-7z"/></svg></button>
+  <button id="bPlay" title="Play / pause (Space or K)"><svg viewBox="0 0 24 24"><path id="playIcon" d="M7 4v16l13-8z"/></svg></button>
+  <button id="bNext" title="Next frame (→ or .)"><svg viewBox="0 0 24 24"><path d="M15 5h2v14h-2zM5 5v14l9-7z"/></svg></button>
+  <span class="num" id="time"><b>0.00</b> / ${dur.toFixed(2)}</span>
+  <input id="seek" type="range" min="0" max="${frames - 1}" step="1" value="0" title="Seek">
+  <span class="num" id="frame"><b>0</b> / ${frames - 1}</span>
+  <select id="speed" title="Playback speed">
+    <option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="0.75">0.75×</option>
+    <option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option>
+  </select>
+  <button id="bLoop" class="on" title="Loop (L)"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg></button>
+  <div class="sep"></div>
+  <button id="bAr" class="txt" title="Switch the cut: 16:9 / 4:5">${vert ? '4:5' : '16:9'}</button>
+  <div class="sep"></div>
+  <button id="bMute" title="Mute (M)"><svg viewBox="0 0 24 24"><path id="muteIcon" d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4z"/></svg></button>
+  <input id="vol" type="range" min="0" max="1" step="0.01" value="1" title="Volume">
+  <div class="sep"></div>
+  <button id="bFull" title="Fullscreen (F)"><svg viewBox="0 0 24 24"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg></button>`;
+
+  const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+
+  window.Player = async function (o) {
+    const QS = new URLSearchParams(location.search);
+    const { W, H, DUR, FPS, VERT } = o, FRAMES = Math.round(DUR * FPS), END = (FRAMES - 1) / FPS;
+    const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
+    document.body.insertAdjacentHTML('afterbegin', `<div id="wrap"><div id="stage"><canvas id="cv"></canvas><div id="loader">Loading…</div></div><div id="playOv"><div class="b"><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg></div><div class="c">Click to play (with sound)</div></div></div><div id="bar">${BAR(o.title || '', FRAMES, DUR, VERT)}</div>`);
+    const $ = id => document.getElementById(id), stage = $('stage'), cv = $('cv'), cx = cv.getContext('2d');
+    stage.style.width = W + 'px'; stage.style.height = H + 'px';
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    if ((navigator.webdriver && !QS.has('player')) || QS.has('nobar')) document.body.classList.add('nobar');
+    const P = { t: 0, playing: false, speed: 1, loop: true, wall: 0, t0: 0, muted: false, vol: 1, drawn: -1, uiT: -1, unlocked: false, blocked: false };
+    let R = 0, ready = false;
+    // the canvas is drawn at the size it is shown (k × device pixels, max 2×), so text stays crisp at any window size
+    const fit = () => {
+      const wr = $('wrap'), k = Math.min(wr.clientWidth / W, wr.clientHeight / H);
+      stage.style.transform = `translate(${(wr.clientWidth - W * k) / 2}px, ${(wr.clientHeight - H * k) / 2}px) scale(${k})`;
+      const nr = clamp(k * (devicePixelRatio || 1), .5, 2);
+      if (Math.abs(nr - R) > .02) { R = nr; cv.width = Math.round(W * R); cv.height = Math.round(H * R); if (ready) render(true); }
+    };
+    // the bar fits any window width without hiding a control: one row if it can, else c1 (no title), else c2 (seek on its
+    // own row, buttons wrap). The stage then takes the height the bar leaves.
+    const bar = $('bar');
+    const layout = () => {
+      if (getComputedStyle(bar).display !== 'none') {
+        const wrapped = () => {
+          const ys = [...bar.children].filter(e => e.offsetParent !== null).map(e => e.offsetTop + e.offsetHeight / 2);
+          return ys.length > 1 && Math.max(...ys) - Math.min(...ys) > 8;
+        };
+        bar.classList.remove('c1', 'c2');
+        if (wrapped()) bar.classList.add('c1');
+        if (wrapped()) bar.classList.add('c2');
+        document.documentElement.style.setProperty('--bar', bar.offsetHeight + 'px');
+      }
+      fit();
+    };
+    layout(); addEventListener('resize', layout); document.addEventListener('fullscreenchange', () => setTimeout(layout, 50));
+    new ResizeObserver(() => layout()).observe(document.documentElement);
+
+    const drawAt = t => { cx.setTransform(R, 0, 0, R, 0, 0); o.draw(cx, t); };
+    await o.setup();
+
+    // volume + mute follow you across reloads, sessions and projects: one vp_prefs cookie serves every
+    // localhost port (localStorage is per port, so it is only the file:// fallback)
+    const vpPrefs = {
+      get() {
+        let p = null;
+        try { const m = document.cookie.match(/(?:^|;\s*)vp_prefs=([^;]*)/); if (m) p = JSON.parse(decodeURIComponent(m[1])); } catch (e) {}
+        if (!p) try { p = JSON.parse(localStorage.getItem('vp_prefs')); } catch (e) {}
+        if (!p || typeof p !== 'object') return null;
+        const v = +p.volume;
+        return { volume: isFinite(v) ? Math.min(1, Math.max(0, v)) : 1, muted: p.muted === true };
+      },
+      set(p) {
+        const s = JSON.stringify({ volume: 1, muted: false, ...vpPrefs.get(), ...p });
+        try { document.cookie = 'vp_prefs=' + encodeURIComponent(s) + '; path=/; max-age=34560000; SameSite=Lax'; } catch (e) {}
+        try { localStorage.setItem('vp_prefs', s); } catch (e) {}
+      }
+    };
+    const VP = vpPrefs.get(); if (VP) { P.vol = VP.volume; P.muted = VP.muted; $('vol').value = P.vol; vpPrefs.set(VP); }
+    const saveVol = () => vpPrefs.set({ volume: P.vol, muted: P.muted });
+
+    // the sound: synthesized once into a WAV, played by one audio element that follows the clock
+    const tracks = [];
+    const snd = new Audio(); snd.preload = 'auto'; snd._g = 1; snd.muted = P.muted; snd.volume = P.vol;
+    snd.src = await o.sound(); tracks.push(snd);
+    $('loader').remove(); ready = true;
+
+    const frameOf = t => Math.min(FRAMES - 1, Math.max(0, Math.floor(t * FPS + 1e-6)));
+    function ui() {
+      const f = frameOf(P.t);
+      $('time').innerHTML = `<b>${P.t.toFixed(2)}</b> / ${DUR.toFixed(2)}`;
+      $('frame').innerHTML = `<b>${f}</b> / ${FRAMES - 1}`;
+      if (!P.scrub) $('seek').value = f;
+      $('playIcon').setAttribute('d', P.playing ? 'M6 4h4v16H6zm8 0h4v16h-4z' : 'M7 4v16l13-8z');
+      $('bLoop').classList.toggle('on', P.loop);
+      $('muteIcon').setAttribute('d', P.muted || P.vol === 0
+        ? 'M3 9v6h4l5 5V4L7 9zm13.6 3 2.7-2.7-1.4-1.4-2.7 2.7-2.7-2.7-1.4 1.4 2.7 2.7-2.7 2.7 1.4 1.4 2.7-2.7 2.7 2.7 1.4-1.4z'
+        : 'M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4z');
+    }
+    function render(force) {
+      const tq = Math.min(END, Math.floor(P.t * FPS + 1e-6) / FPS);
+      if (force || tq !== P.drawn) { drawAt(tq); P.drawn = tq; }
+      if (force || P.t !== P.uiT) { ui(); P.uiT = P.t; }
+    }
+    // the sound follows the clock: seek, pause, speed, mute, volume
+    function audioSync(hard) {
+      const now = performance.now();
+      for (const a of tracks) {
+        if (a.muted !== P.muted) a.muted = P.muted;
+        const vol = clamp(P.vol * a._g); if (Math.abs(a.volume - vol) > .001) a.volume = vol;
+        if (a.playbackRate !== P.speed) a.playbackRate = P.speed;
+        if (a.preservesPitch !== true) a.preservesPitch = true;
+        const at = P.t, past = a.duration && at >= a.duration - .02;
+        if (!P.playing || !P.unlocked || past) {
+          if (!a.paused) a.pause();
+          if (a.readyState && !past && hard) a.currentTime = Math.max(0, at);
+          continue;
+        }
+        if (a.paused) {
+          if (!P.blocked) { if (Math.abs(a.currentTime - at) > .02) a.currentTime = at; a._started = now; a.play().catch(e => { if (e.name !== 'AbortError') P.blocked = true; }); }
+          continue;
+        }
+        if (hard) { a.currentTime = at; a._started = now; }
+        else if (now - (a._started || 0) > 800 && !a.seeking && Math.abs(a.currentTime - at) > .35) { a.currentTime = at; a._started = now; }
+      }
+    }
+    function setTime(t) { P.t = clamp(t, 0, END); P.t0 = P.t; P.wall = performance.now(); audioSync(true); render(); }
+    const ov = $('playOv');
+    function play() {
+      if (P.playing) return; if (P.t >= END && !P.loop) P.t = 0;
+      P.playing = true; P.t0 = P.t; P.wall = performance.now(); audioSync(true); ui(); ov.classList.remove('on');
+    }
+    function pause() { if (!P.playing) return; P.playing = false; audioSync(true); ui(); }
+    const toggle = () => P.playing ? pause() : play();
+    const step = n => { pause(); setTime((frameOf(P.t) + n + FRAMES) % FRAMES / FPS); };
+    function advance(now) {
+      if (P.playing) {
+        let t = P.t0 + (now - P.wall) / 1000 * P.speed;
+        if (t >= DUR) {
+          if (P.loop) { t %= DUR; P.t0 = t; P.wall = now; P.t = t; audioSync(true); }
+          else { P.t = END; P.playing = false; audioSync(true); render(true); ov.classList.add('on'); return; }
+        }
+        P.t = t;
+        // the picture follows the sound softly (the sound starts a little late and runs on its own clock)
+        const s = tracks[0];
+        if (s && !s.paused && !s.seeking && s.readyState >= 3 && performance.now() - (s._started || 0) > 250) {
+          const d = s.currentTime - P.t;
+          if (Math.abs(d) < .35) { const k = d * .1; P.t0 += k; P.t = clamp(P.t + k, 0, END); }
+        }
+        audioSync(false);
+      }
+      render();
+    }
+    let lastRaf = 0;
+    function tick(now) { lastRaf = performance.now(); advance(now); requestAnimationFrame(tick); }
+    setInterval(() => { const now = performance.now(); if (now - lastRaf > 120) advance(now); }, 33);
+    // browsers start sound only after a gesture: the first click / key switches it on, in sync
+    const unlock = e => { const first = !P.unlocked; P.unlocked = true; P.blocked = false; if (first) P.skipClick = stage.contains(e.target); audioSync(true); };
+    addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true);
+    document.querySelectorAll('#bar button').forEach(b => b.addEventListener('pointerup', () => setTimeout(() => b.blur(), 0)));
+    $('bPlay').onclick = toggle;
+    stage.onclick = () => { if (P.skipClick) { P.skipClick = false; return; } toggle(); };
+    ov.onclick = () => { P.unlocked = true; P.blocked = false; ov.classList.remove('on'); if (P.t >= END) setTime(0); play(); };
+    $('bRestart').onclick = () => setTime(0);
+    $('bPrev').onclick = () => step(-1); $('bNext').onclick = () => step(1);
+    $('seek').oninput = e => { P.scrub = true; setTime(+e.target.value / FPS); };
+    $('seek').onchange = () => { P.scrub = false; };
+    $('speed').onchange = e => { P.t0 = P.t; P.wall = performance.now(); P.speed = +e.target.value; audioSync(true); e.target.blur(); };
+    $('bLoop').onclick = () => { P.loop = !P.loop; ui(); };
+    $('bAr').onclick = () => { const q = new URLSearchParams(location.search); if (VERT) q.delete('ar'); else q.set('ar', '45'); q.set('t', P.t.toFixed(3)); if (!P.playing) q.set('paused', ''); else q.delete('paused'); location.search = q.toString(); };
+    $('bMute').onclick = () => { P.muted = !P.muted; saveVol(); audioSync(false); ui(); };
+    $('vol').oninput = e => { P.vol = +e.target.value; if (P.vol > 0) P.muted = false; saveVol(); audioSync(false); ui(); };
+    $('bFull').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    // another video may have changed them while this tab was hidden
+    document.addEventListener('visibilitychange', () => { const v = !document.hidden && vpPrefs.get(); if (v) { P.vol = v.volume; P.muted = v.muted; $('vol').value = P.vol; audioSync(false); ui(); } });
+    addEventListener('keydown', e => {
+      if (e.target.tagName === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const k = e.key, sh = e.shiftKey, stop = () => e.preventDefault();
+      if (k === ' ' || k === 'k' || k === 'K') { stop(); if (!e.repeat) toggle(); }
+      else if (k === 'ArrowLeft') { stop(); sh ? (pause(), setTime(P.t - 1)) : step(-1); }
+      else if (k === 'ArrowRight') { stop(); sh ? (pause(), setTime(P.t + 1)) : step(1); }
+      else if (k === ',' || k === '<') { stop(); step(-1); }
+      else if (k === '.' || k === '>') { stop(); step(1); }
+      else if (k === 'Home') { stop(); setTime(0); }
+      else if (k === 'End') { stop(); pause(); setTime(END); }
+      else if (k === 'm' || k === 'M') { P.muted = !P.muted; saveVol(); audioSync(false); ui(); }
+      else if (k === 'l' || k === 'L') { P.loop = !P.loop; ui(); }
+      else if (k === 'f' || k === 'F') $('bFull').onclick();
+      else return;
+      if (e.target.type === 'range') e.target.blur();
+    });
+    const t0 = parseFloat(QS.get('t')); P.t = isFinite(t0) ? clamp(t0, 0, END) : 0;
+    if (QS.has('loop0')) P.loop = false;
+    render(true);
+    document.fonts && document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', () => render(true));
+    if (QS.has('autoplay')) { P.unlocked = true; play(); }
+    else if (!QS.has('paused')) { if (!navigator.webdriver) ov.classList.add('on'); else play(); }
+    requestAnimationFrame(tick);
+    window.__player = { P, setTime, play, pause, tracks, render, drawAt, canvas: cv, FRAMES, FPS, get R() { return R; } };
+  };
+})();
+</script>
+
+<script src="promo-film.js"></script>
+</body>
+</html>

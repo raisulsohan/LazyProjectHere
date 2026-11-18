@@ -6,9 +6,24 @@
 
 ভিডিও এডিটর আর মোশন ডিজাইনারদের জন্য Windows-এর ছোট একটা রাইট-ক্লিক টুল।
 
-[Read in English](README.md) · [Download](https://github.com/raisulsohan/LazyProjectHere/releases/latest)
+[Read in English](README.md) · [Download](https://github.com/raisulsohan/LazyProjectHere/releases/latest) · [▶ ২০ সেকেন্ডের ডেমো দেখুন](https://raisulsohan.github.io/LazyProjectHere/)
+
+<a href="https://raisulsohan.github.io/LazyProjectHere/"><img src="docs/hero.jpg" width="880" alt="Windows Explorer-এ ফুটেজ ফোল্ডারে রাইট-ক্লিক: New After Effects project here, New Premiere Pro project here"></a>
+
+**[▶ সাউন্ডসহ ডেমো দেখুন](https://raisulsohan.github.io/LazyProjectHere/)** (২০ সেকেন্ড, ব্রাউজারেই চলে)
 
 </div>
+
+## দেখুন
+
+| Premiere Pro | After Effects |
+|---|---|
+| <img src="docs/premiere-ready.jpg" alt="Premiere Pro project: 01 Footage থেকে 05 Photos bin, তিনটা sequence 16X9, 9X16, 4X5"> | <img src="docs/ae-ready.jpg" alt="After Effects project: 00 Comps ফোল্ডারে তিনটা comp 16X9, 9X16, 4X5"> |
+| ৫টা bin, ফোল্ডারের নামে ৩টা sequence | `00 Comps`-এ ৩টা comp, 16X9 খোলা |
+
+<img src="docs/import-folder.jpg" width="880" alt="Import ডায়ালগ (Ctrl+I) ফুটেজ ফোল্ডারেই খোলে">
+
+*Ctrl+I ফুটেজ ফোল্ডারেই খোলে। ফোল্ডার খুঁজে বেড়াতে হয় না।*
 
 ## যা করে
 
